@@ -7,3 +7,4 @@ serviceAccountKey.json
 # Environment variables
 .env
 
+serviceAccountKey.json.json
