@@ -67,4 +67,30 @@ router.post('/verifyAccessCode', async (req, res) => {
     }
 });
 
+// POST /register
+router.post('/register', async (req, res) => {
+    const { phoneNumber, name, email } = req.body;
+
+    if (!phoneNumber || !name || !email) {
+        return res.status(400).json({ error: 'Missing data. All fields are required' });
+    }
+
+    const userExists = await db.collection('users').doc(phoneNumber).get();
+    if (userExists.exists) {
+        return res.status(400).json({ error: 'User already exists' });
+    }
+
+    try {
+        await db.collection('users').doc(phoneNumber).set({
+            role: "student",
+            name,
+            email
+        });
+
+        res.status(200).json({ message: 'User registered successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error, could not register user' });
+    }
+});
 module.exports = router;
