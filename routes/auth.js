@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../firebase');
 const twilio = require('twilio');
+const authMiddleware = require('../middleware/middleware');
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -93,4 +94,52 @@ router.post('/register', async (req, res) => {
         res.status(500).json({ error: 'Server error, could not register user' });
     }
 });
+
+// GET /students
+router.get('/students', authMiddleware, async (req, res) => {
+    try {
+        const snapshot = await db.collection('users').get();
+        const students = [];
+        snapshot.forEach(doc => {
+            students.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        res.status(200).json(students);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// POST /addStudent
+router.post('/addStudent', async (req, res) => {
+    const { name, phone, email } = req.body;
+
+    if (!name || !phone || !email) {
+        return res.status(400).json({ error: 'Missing data. All fields are required' });
+    }
+
+    try {
+        const studentRef = db.collection('users').doc(phone);
+        const studentDoc = await studentRef.get();
+
+        if (studentDoc.exists) {
+            return res.status(400).json({ error: 'Student already exists' });
+        }
+
+        await studentRef.set({
+            role: "student",
+            name,
+            email
+        });
+
+        res.status(200).json({ message: 'Student added successfully' });
+    } catch (err) {
+        console.error('Error adding student:', err);
+        res.status(500).json({ error: 'Server error, could not add student' });
+    }
+});
+
 module.exports = router;
