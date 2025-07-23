@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const authRoutes = require('./routes/auth');
+const instructorRoutes = require('./routes/instructor');
 
 const app = express();
 app.use(cors({
@@ -11,6 +12,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/auth', authRoutes);
+app.use('/instructor', instructorRoutes);
+
 
 //check server is running
 
